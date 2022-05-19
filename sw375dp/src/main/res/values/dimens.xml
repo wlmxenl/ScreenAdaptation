@@ -525,7 +525,7 @@
     <dimen name="dp_400">400dp</dimen>
 
     <!-- font size, you can add if there is no one -->
-    <dimen name="sp_6">6sp</dimen>
+    <dimen name="sp_1">1sp</dimen>
     <dimen name="sp_6_5">6.5sp</dimen>
     <dimen name="sp_7">7sp</dimen>
     <dimen name="sp_7_5">7.5sp</dimen>

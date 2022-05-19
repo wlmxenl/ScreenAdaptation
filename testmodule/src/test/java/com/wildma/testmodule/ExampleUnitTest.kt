@@ -2,9 +2,7 @@ package com.wildma.testmodule
 
 import org.junit.Test
 import java.io.File
-import java.math.RoundingMode
 import java.nio.file.Paths
-import java.text.DecimalFormat
 
 /**
  * Example local unit test, which will execute on the development machine (host).
@@ -12,6 +10,7 @@ import java.text.DecimalFormat
  * @see [Testing documentation](http://d.android.com/tools/testing)
  */
 class ExampleUnitTest {
+
 
     /**
      * 从统计 1w+ 设备信息中计算最小宽度
@@ -23,53 +22,60 @@ class ExampleUnitTest {
 
         val resultMap = HashMap<String, Int>()
 
-        // 截断保留 4 位小数
-        val df = DecimalFormat("#.####").apply{
-            roundingMode = RoundingMode.FLOOR
-        }
-
         devicesFile.forEachLine { deviceInfo ->
             if (index == 0) {
                 index++
                 return@forEachLine
             }
+            index++
+
             deviceInfo.split(",").let {
                 val widthPixels = it[1].toInt()
                 val heightPixels = it[0].toInt()
-                val density = it[2].toFloat()
-                // println("w = $widthPixels, h = $heightPixels, density = $density")
+                val density = it[3].toFloat()
+
                 if (widthPixels < heightPixels) {
-                    val swDp = widthPixels / density
-//                    if (swDp == 800f) {
-//                        println(index)
-//                    }
-                    val swDpFormatStr = df.format(swDp)
-                    resultMap[swDpFormatStr] = resultMap.getOrDefault(swDpFormatStr, 0) + 1
+                    val sw = swFormat(widthPixels / density)
+                    resultMap[sw] = resultMap.getOrDefault(sw, 0) + 1
                 }
             }
-            index++
         }
 
-        val ignoredSWdp = arrayOf(
-            "343.5387", "345.6", "349.0908", "350.5071", "352.3595", "376.4705", "379.5671", "380.3076", "391.8367", "392", "393.174",
-            "423.5293", "432.9411", "450.7041", "451.7647", "481.203",
-            "600.9389")
-
-        // 过滤设备总类别数大于9的
-        val filterMap = resultMap
-                .filter { it.value > 9 && !ignoredSWdp.contains(it.key)}
-                .toSortedMap()
-        println("filterMap.size = ${filterMap.size}")
-
-        val matchDp = StringBuilder()
-
-        filterMap.forEach {
-            println("${it.key} -> ${it.value}")
-            if (matchDp.isNotEmpty()) {
-                matchDp.append(",")
+        // 输出统计结果
+        resultMap
+            .toSortedMap { o1, o2 ->
+                if (o1.toFloat() >= o2.toFloat()) 1 else -1
             }
-            matchDp.append(it.key)
+            .forEach { (sw, count) ->
+                println("$sw -> $count")
+            }
+    }
+
+    private fun swFormat(sw: Float): String {
+        // 360.0 -> 360
+        // 454.73685 -> 454.7368
+        return "%.5f"
+            .format(sw)
+            .let {
+                val result = it.substring(0, it.length - 1).split(".")
+                result[0] + ".${result[1]}".dropLastWhile { char ->
+                    char == '.' || char == '0'
+                }
+            }
+    }
+
+
+
+    @Test
+    fun generateMathDPString() {
+        val file = File(Paths.get("").toAbsolutePath().parent.toAbsolutePath().toString(), "swlist")
+        val dpStrBuilder = StringBuilder()
+        file.forEachLine {
+            if (dpStrBuilder.isNotEmpty()) {
+                dpStrBuilder.append(",")
+            }
+            dpStrBuilder.append(it)
         }
-        println("match_dp=240,270,306,${matchDp}")
+        println(dpStrBuilder.toString())
     }
 }
